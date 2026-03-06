@@ -6,7 +6,7 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 import "./AgentRegistry.sol";
 import "./AgentAccessManager.sol";
-import "./lib/AgentStructs.sol";
+import "./libraries/AgentStructs.sol";
 
 contract AgentMarketplace is Ownable, ReentrancyGuard {
 

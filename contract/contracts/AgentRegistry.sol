@@ -7,57 +7,58 @@ import "./libraries/AgentStructs.sol";
 contract AgentRegistry is Ownable {
 
     using AgentStructs for AgentStructs.Agent;
-    constructor() Ownable(msg.sender) {}
-    uint256 public agentCount;
 
-    mapping(uint256 => AgentStructs.Agent) private agents;
+    uint256 public agentCounter;
+
+    mapping(uint256 => AgentStructs.Agent) public agents;
 
     event AgentRegistered(uint256 agentId, address developer);
     event AgentUpdated(uint256 agentId);
 
+    constructor() Ownable(msg.sender) {}
+
     function registerAgent(
-        string memory name,
         string memory metadataURI,
         bool isPublic,
-        bool payPerTask,
+        AgentStructs.PaymentType paymentType,
         uint256 price,
         uint256 taskPrice,
-        uint256 maxClients
+        uint256 subscriptionPrice,
+        uint256 subscriptionDuration,
+        bool multiClient
     ) external {
 
-        agentCount++;
+        agentCounter++;
 
-        agents[agentCount] = AgentStructs.Agent({
-            id: agentCount,
+        agents[agentCounter] = AgentStructs.Agent({
+            id: agentCounter,
             developer: msg.sender,
-            name: name,
             metadataURI: metadataURI,
+            active: true,
             isPublic: isPublic,
-            payPerTask: payPerTask,
+            paymentType: paymentType,
             price: price,
             taskPrice: taskPrice,
-            maxClients: maxClients,
-            clients: 0,
-            active: true
+            subscriptionPrice: subscriptionPrice,
+            subscriptionDuration: subscriptionDuration,
+            multiClient: multiClient
         });
 
-        emit AgentRegistered(agentCount, msg.sender);
+        emit AgentRegistered(agentCounter, msg.sender);
     }
 
     function updateAgent(
         uint256 agentId,
         string memory metadataURI,
-        uint256 price,
-        uint256 taskPrice
+        bool active
     ) external {
 
         AgentStructs.Agent storage agent = agents[agentId];
 
-        require(msg.sender == agent.developer, "Not developer");
+        require(agent.developer == msg.sender, "Not developer");
 
         agent.metadataURI = metadataURI;
-        agent.price = price;
-        agent.taskPrice = taskPrice;
+        agent.active = active;
 
         emit AgentUpdated(agentId);
     }
@@ -69,5 +70,4 @@ contract AgentRegistry is Ownable {
     {
         return agents[agentId];
     }
-
 }

@@ -16,6 +16,7 @@ contract AgentMarketplace is Ownable, ReentrancyGuard {
 
     event AgentPurchased(uint256 agentId, address buyer);
     event TaskExecuted(uint256 agentId, address user);
+    event SubscriptionStarted(uint256 agentId, address user, uint256 expiry);
 
     constructor(
         address registryAddress,
@@ -28,17 +29,21 @@ contract AgentMarketplace is Ownable, ReentrancyGuard {
     function buyAgent(uint256 agentId) external payable nonReentrant {
         AgentStructs.Agent memory agent = registry.getAgent(agentId);
 
-        require(agent.active, "Inactive");
-        require(!agent.payPerTask, "Use task payment");
-        require(msg.value >= agent.price, "Insufficient");
+        require(agent.active, "Inactive agent");
+        require(
+            agent.paymentType == AgentStructs.PaymentType.ONE_TIME,
+            "Wrong payment type"
+        );
+
+        require(msg.value >= agent.price, "Insufficient payment");
 
         uint256 fee = (msg.value * platformFee) / 100;
         uint256 developerAmount = msg.value - fee;
 
-        // payable(agent.developer).transfer(developerAmount);
         (bool success, ) = payable(agent.developer).call{
             value: developerAmount
         }("");
+
         require(success, "Payment failed");
 
         accessManager.setOwnership(msg.sender, agentId);
@@ -49,19 +54,53 @@ contract AgentMarketplace is Ownable, ReentrancyGuard {
     function payPerTask(uint256 agentId) external payable nonReentrant {
         AgentStructs.Agent memory agent = registry.getAgent(agentId);
 
-        require(agent.payPerTask, "Not pay-per-task");
-        require(msg.value >= agent.taskPrice, "Insufficient");
+        require(agent.active, "Inactive agent");
+
+        require(
+            agent.paymentType == AgentStructs.PaymentType.PAY_PER_TASK,
+            "Wrong payment type"
+        );
+
+        require(msg.value >= agent.taskPrice, "Insufficient payment");
 
         uint256 fee = (msg.value * platformFee) / 100;
         uint256 developerAmount = msg.value - fee;
 
-        // payable(agent.developer).transfer(developerAmount);
         (bool success, ) = payable(agent.developer).call{
             value: developerAmount
         }("");
+
         require(success, "Payment failed");
 
         emit TaskExecuted(agentId, msg.sender);
+    }
+
+    function subscribeAgent(uint256 agentId) external payable nonReentrant {
+        AgentStructs.Agent memory agent = registry.getAgent(agentId);
+
+        require(agent.active, "Inactive agent");
+
+        require(
+            agent.paymentType == AgentStructs.PaymentType.SUBSCRIPTION,
+            "Wrong payment type"
+        );
+
+        require(msg.value >= agent.subscriptionPrice, "Insufficient payment");
+
+        uint256 fee = (msg.value * platformFee) / 100;
+        uint256 developerAmount = msg.value - fee;
+
+        (bool success, ) = payable(agent.developer).call{
+            value: developerAmount
+        }("");
+
+        require(success, "Payment failed");
+
+        uint256 expiry = block.timestamp + agent.subscriptionDuration;
+
+        accessManager.setSubscription(msg.sender, agentId, expiry);
+
+        emit SubscriptionStarted(agentId, msg.sender, expiry);
     }
 
     function setPlatformFee(uint256 fee) external onlyOwner {

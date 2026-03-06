@@ -9,7 +9,6 @@ import "./AgentAccessManager.sol";
 import "./libraries/AgentStructs.sol";
 
 contract AgentMarketplace is Ownable, ReentrancyGuard {
-
     AgentRegistry public registry;
     AgentAccessManager public accessManager;
 
@@ -26,14 +25,8 @@ contract AgentMarketplace is Ownable, ReentrancyGuard {
         accessManager = AgentAccessManager(accessAddress);
     }
 
-    function buyAgent(uint256 agentId)
-        external
-        payable
-        nonReentrant
-    {
-
-        AgentStructs.Agent memory agent =
-            registry.getAgent(agentId);
+    function buyAgent(uint256 agentId) external payable nonReentrant {
+        AgentStructs.Agent memory agent = registry.getAgent(agentId);
 
         require(agent.active, "Inactive");
         require(!agent.payPerTask, "Use task payment");
@@ -42,21 +35,19 @@ contract AgentMarketplace is Ownable, ReentrancyGuard {
         uint256 fee = (msg.value * platformFee) / 100;
         uint256 developerAmount = msg.value - fee;
 
-        payable(agent.developer).transfer(developerAmount);
+        // payable(agent.developer).transfer(developerAmount);
+        (bool success, ) = payable(agent.developer).call{
+            value: developerAmount
+        }("");
+        require(success, "Payment failed");
 
         accessManager.setOwnership(msg.sender, agentId);
 
         emit AgentPurchased(agentId, msg.sender);
     }
 
-    function payPerTask(uint256 agentId)
-        external
-        payable
-        nonReentrant
-    {
-
-        AgentStructs.Agent memory agent =
-            registry.getAgent(agentId);
+    function payPerTask(uint256 agentId) external payable nonReentrant {
+        AgentStructs.Agent memory agent = registry.getAgent(agentId);
 
         require(agent.payPerTask, "Not pay-per-task");
         require(msg.value >= agent.taskPrice, "Insufficient");
@@ -64,15 +55,16 @@ contract AgentMarketplace is Ownable, ReentrancyGuard {
         uint256 fee = (msg.value * platformFee) / 100;
         uint256 developerAmount = msg.value - fee;
 
-        payable(agent.developer).transfer(developerAmount);
+        // payable(agent.developer).transfer(developerAmount);
+        (bool success, ) = payable(agent.developer).call{
+            value: developerAmount
+        }("");
+        require(success, "Payment failed");
 
         emit TaskExecuted(agentId, msg.sender);
     }
 
-    function setPlatformFee(uint256 fee)
-        external
-        onlyOwner
-    {
+    function setPlatformFee(uint256 fee) external onlyOwner {
         platformFee = fee;
     }
 }

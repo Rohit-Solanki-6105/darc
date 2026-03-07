@@ -1,15 +1,13 @@
 "use client";
 
-import React, { useState } from "react";
+import React from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
 import {
   Bot,
   Plus,
   BarChart3,
   Activity,
   Users,
-  Zap,
   ChevronRight,
   LayoutDashboard,
 } from "lucide-react";
@@ -18,7 +16,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AnimatedGradientBackground } from "@/components/AnimatedGradientBackground";
 
 export default function DeveloperDashboardPage() {
-  const [showRegisterForm, setShowRegisterForm] = useState(false);
 
   // Placeholder metrics - replace with real data
   const metrics = [
@@ -45,14 +42,15 @@ export default function DeveloperDashboardPage() {
           </div>
 
           <nav className="flex flex-col gap-1">
-            <Button
-              variant={showRegisterForm ? "secondary" : "ghost"}
-              className="justify-start gap-2"
-              onClick={() => setShowRegisterForm(true)}
-            >
-              <Plus className="w-4 h-4" />
-              Register Agent
-            </Button>
+            <Link href="/registerAgent">
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-2"
+              >
+                <Plus className="w-4 h-4" />
+                Register Agent
+              </Button>
+            </Link>
             <Link href="/developer-dashboard">
               <Button variant="ghost" className="w-full justify-start gap-2">
                 <BarChart3 className="w-4 h-4" />
@@ -93,37 +91,15 @@ export default function DeveloperDashboardPage() {
               </p>
             </div>
 
-            {showRegisterForm ? (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="rounded-2xl border border-border bg-background/60 backdrop-blur-xl p-6"
-              >
-                <h3 className="text-lg font-semibold mb-4">Register New Agent</h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Agent registration form will be integrated here. Connect your agent
-                  endpoint, configure capabilities, and deploy.
-                </p>
-                <div className="flex gap-2">
-                  <Button onClick={() => setShowRegisterForm(false)} variant="outline">
-                    Cancel
-                  </Button>
-                  <Button>
-                    <Zap className="w-4 h-4 mr-2" />
-                    Deploy Agent
-                  </Button>
-                </div>
-              </motion.div>
-            ) : (
+            <Link href="/registerAgent">
               <Button
                 variant="outline"
-                className="w-full h-24 border-dashed border-2"
-                onClick={() => setShowRegisterForm(true)}
+                className="w-full h-24 border-dashed border-2 bg-background/40 hover:bg-background/80 transition-colors"
               >
                 <Plus className="w-5 h-5 mr-2" />
                 Add your first agent or register a new one
               </Button>
-            )}
+            </Link>
 
             <div className="grid gap-4">
               {recentAgents.map((agent) => (
@@ -137,11 +113,10 @@ export default function DeveloperDashboardPage() {
                       {agent.name}
                     </CardTitle>
                     <span
-                      className={`text-xs px-2 py-1 rounded-full ${
-                        agent.status === "live"
-                          ? "bg-green-500/20 text-green-600 dark:text-green-400"
-                          : "bg-muted text-muted-foreground"
-                      }`}
+                      className={`text-xs px-2 py-1 rounded-full ${agent.status === "live"
+                        ? "bg-green-500/20 text-green-600 dark:text-green-400"
+                        : "bg-muted text-muted-foreground"
+                        }`}
                     >
                       {agent.status}
                     </span>

@@ -12,7 +12,7 @@ contract AgentMarketplace is Ownable, ReentrancyGuard {
     AgentRegistry public registry;
     AgentAccessManager public accessManager;
 
-    uint256 public platformFee = 5;
+    uint256 public platformFee = 10;// 10% Fee
 
     event AgentPurchased(uint256 agentId, address buyer);
     event TaskExecuted(uint256 agentId, address user);

@@ -165,7 +165,7 @@ export function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'login' | 's
                 </div>
 
                 <div className="space-y-5">
-                    <GoogleButton />
+                    {/* <GoogleButton /> */}
 
                     <p className="text-center text-[13.5px] text-muted-foreground pt-1">
                         {mode === 'login' ? (

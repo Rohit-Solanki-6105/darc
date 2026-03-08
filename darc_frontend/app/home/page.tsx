@@ -22,30 +22,66 @@ const MOCK_AGENTS = [
   {
     id: 1,
     name: "Code Assistant",
-    description: "Helps you write and refactor code in any language.",
+    description:
+      "Helps you write, refactor, and debug code in multiple programming languages such as JavaScript, Python, and TypeScript. It can also suggest better patterns, optimize performance, and explain complex logic to improve code quality.",
     category: "Code",
     usage: "12k uses",
   },
   {
     id: 2,
     name: "Content Writer",
-    description: "Creates blog posts, ads, and marketing copy.",
+    description:
+      "Creates blog posts, landing page copy, advertisements, and long-form marketing content. It can adapt tone for different audiences, generate headlines, and structure articles for readability and engagement.",
     category: "Writing",
     usage: "8k uses",
   },
   {
     id: 3,
     name: "Data Analyzer",
-    description: "Analyzes datasets and generates insights.",
+    description:
+      "Analyzes datasets, identifies patterns, and generates actionable insights. It can summarize data trends, explain correlations, and assist with creating reports or visualizations for decision making.",
     category: "Analysis",
     usage: "5k uses",
   },
   {
     id: 4,
     name: "Image Generator",
-    description: "Creates images from text descriptions.",
+    description:
+      "Creates high-quality images from natural language prompts. You can generate illustrations, concept art, product mockups, and creative visuals for presentations, marketing materials, or social media.",
     category: "Creative",
     usage: "15k uses",
+  },
+  {
+    id: 5,
+    name: "SEO Optimizer",
+    description:
+      "Improves your content’s search engine performance by suggesting relevant keywords, optimizing headings, analyzing readability, and providing on-page SEO recommendations to increase organic traffic.",
+    category: "Code",
+    usage: "6k uses",
+  },
+  {
+    id: 6,
+    name: "Chatbot Builder",
+    description:
+      "Helps design, configure, and deploy conversational chatbots for websites or apps. It supports conversation flows, automated responses, and integrations with APIs or customer support tools.",
+    category: "Writing",
+    usage: "7k uses",
+  },
+  {
+    id: 7,
+    name: "Resume Reviewer",
+    description:
+      "Reviews resumes and provides detailed feedback on structure, wording, and formatting. It suggests improvements to highlight achievements, optimize for ATS systems, and increase interview chances.",
+    category: "Productivity",
+    usage: "4k uses",
+  },
+  {
+    id: 8,
+    name: "Social Media Manager",
+    description:
+      "Generates social media posts, captions, hashtags, and monthly content calendars. It can adapt messaging for different platforms like LinkedIn, Instagram, and X while maintaining brand voice.",
+    category: "Analysis",
+    usage: "9k uses",
   },
 ];
 
@@ -56,12 +92,12 @@ export default function HomePage() {
   const filteredAgents =
     category === "All"
       ? MOCK_AGENTS.filter((a) =>
-          a.name.toLowerCase().includes(search.toLowerCase())
+          a.name.toLowerCase().includes(search.toLowerCase()),
         )
       : MOCK_AGENTS.filter(
           (a) =>
             a.category === category &&
-            a.name.toLowerCase().includes(search.toLowerCase())
+            a.name.toLowerCase().includes(search.toLowerCase()),
         );
 
   return (
@@ -137,7 +173,9 @@ export default function HomePage() {
                   className="shrink-0 rounded-xl"
                   onClick={() => setCategory(c)}
                 >
-                  {c === "All" && <SlidersHorizontal className="w-4 h-4 mr-1.5" />}
+                  {c === "All" && (
+                    <SlidersHorizontal className="w-4 h-4 mr-1.5" />
+                  )}
                   {c}
                 </Button>
               ))}
@@ -146,19 +184,19 @@ export default function HomePage() {
         </section>
 
         {/* Agent Grid */}
-        <section className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 pb-12">
+        <section className="flex-1 max-w-8xl mx-auto w-full px-4 sm:px-6 pb-12">
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
-            className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"
+            className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2"
           >
             {filteredAgents.map((agent) => (
               <Card
                 key={agent.id}
                 className="bg-background/60 backdrop-blur-xl border-border hover:border-primary/30 transition-colors cursor-pointer group"
               >
-                <CardContent className="p-4">
+                <CardContent>
                   <div className="flex items-start gap-3">
                     <div className="p-2 rounded-lg bg-primary/10 text-primary">
                       <Bot className="w-5 h-5" />
@@ -167,7 +205,7 @@ export default function HomePage() {
                       <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
                         {agent.name}
                       </h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">
+                      <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5 h-26">
                         {agent.description}
                       </p>
                       <div className="flex items-center gap-2 mt-2">

@@ -156,17 +156,17 @@ export function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'login' | 's
                     </div>
                 </form>
 
-                <div className="relative my-7">
+                {/* <div className="relative my-7">
                     <div className="absolute inset-0 flex items-center">
                         <Separator className="w-full bg-border" />
                     </div>
                     <div className="relative flex justify-center text-[13px] text-muted-foreground">
                         <span className="bg-background px-3 rounded-md">Or continue with</span>
                     </div>
-                </div>
+                </div> */}
 
-                <div className="space-y-5">
-                    <GoogleButton />
+                <div className="space-y-5 mt-4">
+                    {/* <GoogleButton /> */}
 
                     <p className="text-center text-[13.5px] text-muted-foreground pt-1">
                         {mode === 'login' ? (

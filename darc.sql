@@ -35,6 +35,7 @@ CREATE TABLE `agents` (
   `task_fees` decimal(18,8) DEFAULT NULL,
   `agent_price` decimal(18,8) DEFAULT NULL,
   `subscription_fee` decimal(18,8) DEFAULT NULL,
+  `rating` decimal(10,8) DEFAULT NULL,
   `subscription_duration_days` int(11) DEFAULT 30,
   `agent_template` longtext CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL CHECK (json_valid(`agent_template`)),
   `status` enum('pending','approved','rejected') DEFAULT 'pending',

@@ -61,28 +61,7 @@ export function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'login' | 's
                     : (role === 'client' ? "Sign up to access and use agents" : "Sign up to deploy and host your agents")}
             >
                 <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="flex p-1 bg-muted rounded-xl mb-4">
-                        <button
-                            type="button"
-                            onClick={() => setRole('client')}
-                            className={`flex-1 py-2 text-[13px] font-medium rounded-lg transition-all duration-200 ${role === 'client'
-                                ? 'bg-background text-foreground shadow-sm'
-                                : 'text-muted-foreground hover:text-foreground'
-                                }`}
-                        >
-                            Client
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setRole('developer')}
-                            className={`flex-1 py-2 text-[13px] font-medium rounded-lg transition-all duration-200 ${role === 'developer'
-                                ? 'bg-background text-foreground shadow-sm'
-                                : 'text-muted-foreground hover:text-foreground'
-                                }`}
-                        >
-                            Developer
-                        </button>
-                    </div>
+
 
                     <div className="mb-2 text-center">
                         <p className="text-[13px] text-muted-foreground transition-all">
@@ -143,6 +122,28 @@ export function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'login' | 's
                             className="h-11 rounded-xl bg-background focus-visible:ring-1 focus-visible:ring-ring border-border transition-shadow text-[15px]"
                             required
                         />
+                    </div>
+                                        <div className="flex p-1 bg-muted rounded-xl mb-4">
+                        <button
+                            type="button"
+                            onClick={() => setRole('client')}
+                            className={`flex-1 py-2 text-[13px] font-medium rounded-lg transition-all duration-200 ${role === 'client'
+                                ? 'bg-background text-foreground shadow-sm'
+                                : 'text-muted-foreground hover:text-foreground'
+                                }`}
+                        >
+                            Client
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setRole('developer')}
+                            className={`flex-1 py-2 text-[13px] font-medium rounded-lg transition-all duration-200 ${role === 'developer'
+                                ? 'bg-background text-foreground shadow-sm'
+                                : 'text-muted-foreground hover:text-foreground'
+                                }`}
+                        >
+                            Developer
+                        </button>
                     </div>
 
                     <div className="pt-2">

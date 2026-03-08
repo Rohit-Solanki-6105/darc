@@ -3,7 +3,6 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { AuthCard } from './AuthCard';
-import { GoogleButton } from './GoogleButton';
 import { Input } from './ui/input';
 import { Label } from './ui/label';
 import { Button } from './ui/button';
@@ -18,19 +17,50 @@ export function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'login' | 's
     const [password, setPassword] = useState('');
     const [error, setError] = useState('');
     const [role, setRole] = useState<'client' | 'developer'>('client');
+
     const { setRole: persistRole } = useAuth();
     const router = useRouter();
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-        // Simulate error for preview
-        if (email !== 'correct@example.com') {
-            setError('Invalid email or password');
-            setTimeout(() => setError(''), 3000);
-        } else {
-            setError('');
-            persistRole(role);
-            router.push('/connect-wallet');
+        setError("");
+
+        try {
+            const apiRoute = mode === "signup" ? "/api/signup" : "/api/login";
+
+            const body =
+                mode === "signup"
+                    ? { name, email, password, role }
+                    : { email, password };
+
+            const response = await fetch(apiRoute, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                },
+                body: JSON.stringify(body),
+            });
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                setError(data.error || "Something went wrong");
+                setTimeout(() => setError(""), 3000);
+                return;
+            }
+
+            const userRole = data.user?.role || data.role;
+
+            persistRole(userRole);
+
+            if (userRole === "developer") {
+                router.push("/developer-dashboard");
+            } else {
+                router.push("/home");
+            }
+
+        } catch (err) {
+            setError("Server error");
         }
     };
 
@@ -44,141 +74,124 @@ export function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'login' | 's
                         exit={{ opacity: 0, y: -20, scale: 0.95 }}
                         className="fixed top-8 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-full border border-red-100 bg-red-50/90 px-4 py-2 text-sm font-medium text-red-600 backdrop-blur-md shadow-sm"
                     >
-                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                        </svg>
                         {error}
                     </motion.div>
                 )}
             </AnimatePresence>
 
             <AuthCard
-                title={mode === 'login'
-                    ? (role === 'client' ? "Welcome back, Client" : "Welcome back, Developer")
-                    : (role === 'client' ? "Create Client Account" : "Create Developer Account")}
-                subtitle={mode === 'login'
-                    ? (role === 'client' ? "Enter your credentials to access your account" : "Enter your credentials to manage your agents")
-                    : (role === 'client' ? "Sign up to access and use agents" : "Sign up to deploy and host your agents")}
+                title={
+                    mode === 'login'
+                        ? "Welcome back"
+                        : role === 'client'
+                            ? "Create Client Account"
+                            : "Create Developer Account"
+                }
+                subtitle={
+                    mode === 'login'
+                        ? "Enter your credentials to access your account"
+                        : role === 'client'
+                            ? "Sign up to access and use agents"
+                            : "Sign up to deploy and host your agents"
+                }
             >
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    <div className="flex p-1 bg-muted rounded-xl mb-4">
-                        <button
-                            type="button"
-                            onClick={() => setRole('client')}
-                            className={`flex-1 py-2 text-[13px] font-medium rounded-lg transition-all duration-200 ${role === 'client'
-                                ? 'bg-background text-foreground shadow-sm'
-                                : 'text-muted-foreground hover:text-foreground'
-                                }`}
-                        >
-                            Client
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setRole('developer')}
-                            className={`flex-1 py-2 text-[13px] font-medium rounded-lg transition-all duration-200 ${role === 'developer'
-                                ? 'bg-background text-foreground shadow-sm'
-                                : 'text-muted-foreground hover:text-foreground'
-                                }`}
-                        >
-                            Developer
-                        </button>
-                    </div>
 
-                    <div className="mb-2 text-center">
-                        <p className="text-[13px] text-muted-foreground transition-all">
-                            {role === 'client'
-                                ? 'Access and use agents on our platform.'
-                                : 'Deploy and host your agents on our platform.'}
-                        </p>
-                    </div>
+                <form onSubmit={handleSubmit} className="space-y-4">
 
                     {mode === 'signup' && (
                         <div className="space-y-1.5">
-                            <Label htmlFor="name" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                                Full Name
-                            </Label>
+                            <Label htmlFor="name">Full Name</Label>
                             <Input
                                 id="name"
                                 type="text"
                                 placeholder="John Doe"
                                 value={name}
                                 onChange={(e) => setName(e.target.value)}
-                                className="h-11 rounded-xl bg-background focus-visible:ring-1 focus-visible:ring-ring border-border transition-shadow text-[15px]"
                                 required
                             />
                         </div>
                     )}
 
                     <div className="space-y-1.5">
-                        <Label htmlFor="email" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                            Email
-                        </Label>
+                        <Label htmlFor="email">Email</Label>
                         <Input
                             id="email"
                             type="email"
-                            placeholder="hello@designwithmikey.com"
+                            placeholder="example@email.com"
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
-                            className="h-11 rounded-xl bg-background focus-visible:ring-1 focus-visible:ring-ring border-border transition-shadow text-[15px]"
                             required
                         />
                     </div>
-                    <div className="space-y-1.5 pt-1">
-                        <div className="flex items-center justify-between">
-                            <Label htmlFor="password" className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                                Password
-                            </Label>
-                            {mode === 'login' && (
-                                <a href="#" className="text-[12px] font-medium text-blue-600/90 hover:text-blue-600 hover:underline underline-offset-4">
-                                    Forgot password?
-                                </a>
-                            )}
-                        </div>
+
+                    <div className="space-y-1.5">
+                        <Label htmlFor="password">Password</Label>
                         <Input
                             id="password"
                             type="password"
                             placeholder="••••••••"
                             value={password}
                             onChange={(e) => setPassword(e.target.value)}
-                            className="h-11 rounded-xl bg-background focus-visible:ring-1 focus-visible:ring-ring border-border transition-shadow text-[15px]"
                             required
                         />
                     </div>
 
-                    <div className="pt-2">
-                        <Button
-                            type="submit"
-                            className="h-11 w-full rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all font-medium text-[15px]"
-                        >
-                            {mode === 'login' ? 'Sign in' : 'Sign up'}
-                        </Button>
-                    </div>
+                    {mode === "signup" && (
+                        <div className="flex p-1 bg-muted rounded-xl mb-4">
+                            <button
+                                type="button"
+                                onClick={() => setRole('client')}
+                                className={`flex-1 py-2 text-sm rounded-lg ${role === 'client'
+                                    ? 'bg-white shadow'
+                                    : 'text-gray-500'
+                                    }`}
+                            >
+                                Client
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setRole('developer')}
+                                className={`flex-1 py-2 text-sm rounded-lg ${role === 'developer'
+                                    ? 'bg-white shadow'
+                                    : 'text-gray-500'
+                                    }`}
+                            >
+                                Developer
+                            </button>
+                        </div>
+                    )}
+
+                    <Button type="submit" className="w-full">
+                        {mode === 'login' ? 'Sign In' : 'Sign Up'}
+                    </Button>
+
                 </form>
 
-                <div className="relative my-7">
+                <div className="relative my-6">
                     <div className="absolute inset-0 flex items-center">
-                        <Separator className="w-full bg-border" />
-                    </div>
-                    <div className="relative flex justify-center text-[13px] text-muted-foreground">
-                        <span className="bg-background px-3 rounded-md">Or continue with</span>
+                        <Separator className="w-full" />
                     </div>
                 </div>
 
-                <div className="space-y-5">
-                    {/* <GoogleButton /> */}
+                <p className="text-center text-sm text-muted-foreground">
+                    {mode === 'login' ? (
+                        <>
+                            Don&apos;t have an account?{" "}
+                            <a href="/signup" className="text-blue-600 hover:underline">
+                                Sign up
+                            </a>
+                        </>
+                    ) : (
+                        <>
+                            Already have an account?{" "}
+                            <a href="/login" className="text-blue-600 hover:underline">
+                                Sign in
+                            </a>
+                        </>
+                    )}
+                </p>
 
-                    <p className="text-center text-[13.5px] text-muted-foreground pt-1">
-                        {mode === 'login' ? (
-                            <>
-                                Don&apos;t have an account? <a href="/signup" className="font-medium text-blue-600/90 hover:text-blue-600 hover:underline underline-offset-4">Sign up</a>
-                            </>
-                        ) : (
-                            <>
-                                Already have an account? <a href="/login" className="font-medium text-blue-600/90 hover:text-blue-600 hover:underline underline-offset-4">Sign in</a>
-                            </>
-                        )}
-                    </p>
-                </div>
             </AuthCard>
         </>
     );

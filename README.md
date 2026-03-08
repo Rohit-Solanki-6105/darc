@@ -110,7 +110,7 @@ Responsibilities:
 ## Database Layer
 
 Technology:
-PostgreSQL
+MySQL
 
 Stores:
 

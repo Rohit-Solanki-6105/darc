@@ -4,17 +4,13 @@ pragma solidity ^0.8.20;
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract AgentAccessManager is Ownable {
-
     mapping(address => mapping(uint256 => bool)) public ownership;
 
     mapping(address => mapping(uint256 => uint256)) public subscriptionExpiry;
 
     constructor() Ownable(msg.sender) {}
 
-    function setOwnership(
-        address user,
-        uint256 agentId
-    ) external onlyOwner {
+    function setOwnership(address user, uint256 agentId) external onlyOwner {
         ownership[user][agentId] = true;
     }
 
@@ -30,7 +26,6 @@ contract AgentAccessManager is Ownable {
         address user,
         uint256 agentId
     ) public view returns (bool) {
-
         if (ownership[user][agentId]) {
             return true;
         }

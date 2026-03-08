@@ -5,9 +5,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import "./libraries/AgentStructs.sol";
 
 contract AgentRegistry is Ownable {
-
-    using AgentStructs for AgentStructs.Agent;
-
     uint256 public agentCounter;
 
     mapping(uint256 => AgentStructs.Agent) public agents;
@@ -27,7 +24,6 @@ contract AgentRegistry is Ownable {
         uint256 subscriptionDuration,
         bool multiClient
     ) external {
-
         agentCounter++;
 
         agents[agentCounter] = AgentStructs.Agent({
@@ -52,7 +48,6 @@ contract AgentRegistry is Ownable {
         string memory metadataURI,
         bool active
     ) external {
-
         AgentStructs.Agent storage agent = agents[agentId];
 
         require(agent.developer == msg.sender, "Not developer");
@@ -63,11 +58,9 @@ contract AgentRegistry is Ownable {
         emit AgentUpdated(agentId);
     }
 
-    function getAgent(uint256 agentId)
-        external
-        view
-        returns (AgentStructs.Agent memory)
-    {
+    function getAgent(
+        uint256 agentId
+    ) external view returns (AgentStructs.Agent memory) {
         return agents[agentId];
     }
 }

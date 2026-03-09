@@ -1,5 +1,38 @@
 from django.contrib import admin
-from .models import Agent
+from .models import Agent, Capability, CapabilityMapper
+
+
+@admin.register(Capability)
+class CapabilityAdmin(admin.ModelAdmin):
+    list_display = ('capability_id', 'name', 'created_at')
+    search_fields = ('name', 'description')
+    readonly_fields = ('capability_id', 'created_at', 'updated_at')
+    fieldsets = (
+        ('Info', {
+            'fields': ('capability_id', 'name', 'description')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+    )
+
+
+@admin.register(CapabilityMapper)
+class CapabilityMapperAdmin(admin.ModelAdmin):
+    list_display = ('capability_mapper_id', 'agent_id', 'capability_id', 'created_at')
+    list_filter = ('created_at', 'capability_id')
+    search_fields = ('agent_id__agent_name', 'capability_id__name')
+    readonly_fields = ('capability_mapper_id', 'created_at')
+    fieldsets = (
+        ('Mapping', {
+            'fields': ('capability_mapper_id', 'agent_id', 'capability_id')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at',),
+            'classes': ('collapse',)
+        }),
+    )
 
 
 @admin.register(Agent)

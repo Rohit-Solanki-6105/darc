@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import User
+from .models import User, AuthToken
 
 
 @admin.register(User)
@@ -23,4 +23,13 @@ class UserAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         }),
     )
+
+
+@admin.register(AuthToken)
+class AuthTokenAdmin(admin.ModelAdmin):
+    list_display = ('key', 'user', 'created')
+    list_filter = ('created',)
+    search_fields = ('user__email', 'key')
+    readonly_fields = ('key', 'created')
+
 

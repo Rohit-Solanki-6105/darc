@@ -1,12 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Search, SlidersHorizontal, Bot, Sparkles, Zap } from "lucide-react";
+import { Search, SlidersHorizontal, Bot, Sparkles, Zap, Store, LogOut, Settings } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { AnimatedGradientBackground } from "@/components/AnimatedGradientBackground";
+import { useAuthContext } from "@/contexts/AuthContext";
+import { useAgents } from "@/hooks/useApi";
 
 const CATEGORIES = [
   "All",
@@ -17,52 +20,33 @@ const CATEGORIES = [
   "Productivity",
 ];
 
-// Placeholder agents - replace with API data
-const MOCK_AGENTS = [
-  {
-    id: 1,
-    name: "Code Assistant",
-    description: "Helps you write and refactor code in any language.",
-    category: "Code",
-    usage: "12k uses",
-  },
-  {
-    id: 2,
-    name: "Content Writer",
-    description: "Creates blog posts, ads, and marketing copy.",
-    category: "Writing",
-    usage: "8k uses",
-  },
-  {
-    id: 3,
-    name: "Data Analyzer",
-    description: "Analyzes datasets and generates insights.",
-    category: "Analysis",
-    usage: "5k uses",
-  },
-  {
-    id: 4,
-    name: "Image Generator",
-    description: "Creates images from text descriptions.",
-    category: "Creative",
-    usage: "15k uses",
-  },
-];
-
 export default function HomePage() {
+  const router = useRouter();
+  const { user, isAuthenticated, logout } = useAuthContext();
+  const { agents, isLoading, error, fetchAgents } = useAgents();
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("All");
 
+  // Fetch approved agents on mount and when search changes
+  useEffect(() => {
+    fetchAgents({ search, status: "approved" });
+  }, [search, fetchAgents]);
+
+  // Filter agents by category on the client side
   const filteredAgents =
     category === "All"
-      ? MOCK_AGENTS.filter((a) =>
-          a.name.toLowerCase().includes(search.toLowerCase())
-        )
-      : MOCK_AGENTS.filter(
-          (a) =>
-            a.category === category &&
-            a.name.toLowerCase().includes(search.toLowerCase())
-        );
+      ? agents
+      : agents.filter((a) => {
+          // Map agent description to category if needed
+          // For now, use the search results returned by API
+          return true;
+        });
+
+  // Handle logout
+  const handleLogout = () => {
+    logout();
+    router.push("/login");
+  };
 
   return (
     <main className="relative min-h-screen w-full">
@@ -75,20 +59,57 @@ export default function HomePage() {
               <Sparkles className="w-6 h-6 text-primary" />
               <span className="font-bold text-lg text-foreground">DARC</span>
             </div>
-            <nav className="flex items-center gap-4">
-              <a
-                href="/"
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Login
-              </a>
-              <a
-                href="/connect-wallet"
-                className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-              >
-                Connect Wallet
-              </a>
-            </nav>
+            {isAuthenticated && user ? (
+              <nav className="flex items-center gap-4">
+                <span className="text-sm text-muted-foreground">
+                  Welcome, <span className="font-semibold text-foreground">{user.first_name || "User"}</span>
+                </span>
+                {user.is_developer && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-lg"
+                    onClick={() => router.push("/developer-dashboard")}
+                  >
+                    <Store className="w-4 h-4 mr-1.5" />
+                    Developer Dashboard
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="rounded-lg"
+                  onClick={() => router.push("/account-settings")}
+                >
+                  <Settings className="w-4 h-4 mr-1.5" />
+                  Settings
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  className="rounded-lg"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="w-4 h-4 mr-1.5" />
+                  Logout
+                </Button>
+              </nav>
+            ) : (
+              <nav className="flex items-center gap-4">
+                <a
+                  href="/login"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Login
+                </a>
+                <a
+                  href="/connect-wallet"
+                  className="text-sm text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Connect Wallet
+                </a>
+              </nav>
+            )}
           </div>
         </header>
 
@@ -147,49 +168,103 @@ export default function HomePage() {
 
         {/* Agent Grid */}
         <section className="flex-1 max-w-6xl mx-auto w-full px-4 sm:px-6 pb-12">
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4"
-          >
-            {filteredAgents.map((agent) => (
-              <Card
-                key={agent.id}
-                className="bg-background/60 backdrop-blur-xl border-border hover:border-primary/30 transition-colors cursor-pointer group"
-              >
-                <CardContent className="p-4">
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                      <Bot className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                        {agent.name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5">
-                        {agent.description}
-                      </p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <span className="text-xs text-muted-foreground">
-                          {agent.usage}
-                        </span>
-                        <span className="text-xs px-1.5 py-0.5 rounded bg-muted">
-                          {agent.category}
-                        </span>
-                      </div>
-                    </div>
-                    <Zap className="w-4 h-4 text-muted-foreground group-hover:text-primary shrink-0 mt-1" />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </motion.div>
-
-          {filteredAgents.length === 0 && (
-            <div className="text-center py-12 text-muted-foreground">
-              No agents match your search. Try a different query or category.
+          {/* Loading State */}
+          {isLoading && (
+            <div className="flex items-center justify-center py-12">
+              <motion.div
+                animate={{ rotate: 360 }}
+                transition={{ repeat: Infinity, duration: 2 }}
+                className="w-8 h-8 border-4 border-primary border-t-transparent rounded-full"
+              />
+              <span className="ml-3 text-muted-foreground">Loading agents...</span>
             </div>
+          )}
+
+          {/* Error State */}
+          {error && !isLoading && (
+            <div className="bg-destructive/10 border border-destructive/30 rounded-lg p-4 text-destructive">
+              <p className="font-semibold">Failed to load agents</p>
+              <p className="text-sm mt-1">{error}</p>
+              <Button
+                variant="outline"
+                size="sm"
+                className="mt-3"
+                onClick={() => fetchAgents({ search, status: "approved" })}
+              >
+                Retry
+              </Button>
+            </div>
+          )}
+
+          {/* Agents Grid */}
+          {!isLoading && !error && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+              className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+            >
+              {filteredAgents && filteredAgents.length > 0 ? (
+                filteredAgents.map((agent) => (
+                  <motion.div
+                    key={agent.agent_id}
+                    whileHover={{ y: -4 }}
+                    onClick={() => router.push(`/agents/${agent.agent_id}`)}
+                  >
+                    <Card className="bg-background/60 backdrop-blur-xl border-border hover:border-primary/30 transition-colors cursor-pointer group h-full">
+                      <CardContent className="p-4 flex flex-col h-full">
+                        <div className="flex items-start gap-3 mb-3">
+                          <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                            <Bot className="w-5 h-5" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors truncate">
+                              {agent.agent_name}
+                            </h3>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              by Developer
+                            </p>
+                          </div>
+                          <Zap className="w-4 h-4 text-muted-foreground group-hover:text-primary shrink-0 mt-1" />
+                        </div>
+
+                        <p className="text-sm text-muted-foreground line-clamp-2 mb-3 flex-1">
+                          {agent.description}
+                        </p>
+
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">Rating:</span>
+                            <span className="text-sm font-semibold text-primary">
+                              {(agent.rating || 0).toFixed(1)} ⭐
+                            </span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-muted-foreground">Price:</span>
+                            <span className="text-sm font-semibold">
+                              ${parseFloat(agent.agent_price || 0).toFixed(2)}
+                            </span>
+                          </div>
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="w-full mt-3 rounded-lg"
+                          >
+                            Use Agent
+                          </Button>
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))
+              ) : (
+                <div className="col-span-full text-center py-12 text-muted-foreground">
+                  <Bot className="w-12 h-12 mx-auto mb-3 opacity-50" />
+                  <p>No agents found matching your search.</p>
+                  <p className="text-sm mt-1">Try a different search term or category.</p>
+                </div>
+              )}
+            </motion.div>
           )}
         </section>
       </div>

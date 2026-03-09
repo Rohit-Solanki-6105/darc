@@ -3,7 +3,7 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django.contrib.auth.hashers import check_password
-from .models import User
+from .models import User, AuthToken
 from .serializers import (
     UserSerializer,
     UserCreateSerializer,
@@ -27,6 +27,22 @@ class UserViewSet(viewsets.ModelViewSet):
             return UserLoginSerializer
         return UserSerializer
     
+    def create(self, request, *args, **kwargs):
+        """Create a new user and generate authentication token"""
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        
+        # Create authentication token for the user
+        token, created = AuthToken.objects.get_or_create(user=user)
+        
+        user_serializer = UserSerializer(user)
+        return Response({
+            'message': 'User created successfully',
+            'token': token.key,
+            'user': user_serializer.data
+        }, status=status.HTTP_201_CREATED)
+    
     @action(detail=False, methods=['post'], permission_classes=[AllowAny])
     def login(self, request):
         """User login endpoint"""
@@ -36,9 +52,13 @@ class UserViewSet(viewsets.ModelViewSet):
         try:
             user = User.objects.get(email=serializer.validated_data['email'])
             if user.check_password(serializer.validated_data['password']):
+                # Get or create authentication token
+                token, created = AuthToken.objects.get_or_create(user=user)
+                
                 user_serializer = UserSerializer(user)
                 return Response({
                     'message': 'Login successful',
+                    'token': token.key,
                     'user': user_serializer.data
                 }, status=status.HTTP_200_OK)
             else:

@@ -4,12 +4,13 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from django_filters.rest_framework import DjangoFilterBackend
 from django.db.models import Avg, Q
-from .models import Agent
+from .models import Agent, Capability, CapabilityMapper
 from .serializers import (
     AgentSerializer,
     AgentCreateSerializer,
     AgentUpdateSerializer,
-    AgentListSerializer
+    AgentListSerializer,
+    CapabilitySerializer
 )
 
 
@@ -132,4 +133,58 @@ class AgentViewSet(viewsets.ModelViewSet):
             {'message': 'Agent rejected'},
             status=status.HTTP_200_OK
         )
+
+
+class CapabilityViewSet(viewsets.ModelViewSet):
+    """ViewSet for Capability model operations"""
+    queryset = Capability.objects.all()
+    serializer_class = CapabilitySerializer
+    permission_classes = [AllowAny]
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ['name', 'description']
+    ordering_fields = ['name', 'created_at']
+    ordering = ['name']
+    
+    def create(self, request, *args, **kwargs):
+        """Create or get existing capability"""
+        name = request.data.get('name', '').strip()
+        if not name:
+            return Response(
+                {'error': 'Capability name is required'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Check if capability already exists
+        capability, created = Capability.objects.get_or_create(
+            name=name,
+            defaults={'description': request.data.get('description', '')}
+        )
+        
+        serializer = self.get_serializer(capability)
+        return Response(serializer.data, status=status.HTTP_201_CREATED if created else status.HTTP_200_OK)
+    
+    @action(detail=False, methods=['post'])
+    def bulk_create(self, request):
+        """Create or get multiple capabilities at once"""
+        capabilities_data = request.data.get('capabilities', [])
+        if not isinstance(capabilities_data, list):
+            return Response(
+                {'error': 'Capabilities must be a list'},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        created_capabilities = []
+        for cap_name in capabilities_data:
+            if isinstance(cap_name, str):
+                capability, _ = Capability.objects.get_or_create(name=cap_name.strip())
+                created_capabilities.append(capability)
+            elif isinstance(cap_name, dict):
+                capability, _ = Capability.objects.get_or_create(
+                    name=cap_name.get('name', '').strip(),
+                    defaults={'description': cap_name.get('description', '')}
+                )
+                created_capabilities.append(capability)
+        
+        serializer = self.get_serializer(created_capabilities, many=True)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 

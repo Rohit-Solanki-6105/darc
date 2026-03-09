@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.hashers import make_password, check_password
 from django.core.validators import EmailValidator
 from decimal import Decimal
+import secrets
 
 
 class User(models.Model):
@@ -56,3 +57,26 @@ class User(models.Model):
     def check_password(self, raw_password):
         """Verify password"""
         return check_password(raw_password, self.password_hash)
+
+
+class AuthToken(models.Model):
+    """Custom authentication token model for User"""
+    key = models.CharField(("Key"), max_length=40, primary_key=True)
+    user = models.OneToOneField(User, related_name="auth_token", on_delete=models.CASCADE)
+    created = models.DateTimeField(("Created"), auto_now_add=True)
+
+    class Meta:
+        verbose_name = "Auth Token"
+        db_table = 'users_authtoken'
+
+    def save(self, *args, **kwargs):
+        if not self.key:
+            self.key = self.generate_key()
+        return super().save(*args, **kwargs)
+
+    @staticmethod
+    def generate_key():
+        return secrets.token_hex(20)
+
+    def __str__(self):
+        return self.key

@@ -4,6 +4,23 @@ from decimal import Decimal
 import json
 
 
+class Capability(models.Model):
+    """Capability model for agent capabilities"""
+    
+    capability_id = models.AutoField(primary_key=True)
+    name = models.CharField(max_length=255, unique=True)
+    description = models.TextField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        db_table = 'capabilities'
+        ordering = ['name']
+    
+    def __str__(self):
+        return self.name
+
+
 class Agent(models.Model):
     """Agent model for DARC platform"""
     
@@ -73,3 +90,28 @@ class Agent(models.Model):
     
     def __str__(self):
         return f"{self.agent_name} by {self.developer_id.full_name}"
+
+
+class CapabilityMapper(models.Model):
+    """Mapping table for agent capabilities"""
+    
+    capability_mapper_id = models.AutoField(primary_key=True)
+    agent_id = models.ForeignKey(
+        Agent,
+        on_delete=models.CASCADE,
+        related_name='capabilities_rel'
+    )
+    capability_id = models.ForeignKey(
+        Capability,
+        on_delete=models.CASCADE,
+        related_name='agents_rel'
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        db_table = 'cap_mapper'
+        ordering = ['created_at']
+        unique_together = ('agent_id', 'capability_id')
+    
+    def __str__(self):
+        return f"{self.agent_id.agent_name} - {self.capability_id.name}"

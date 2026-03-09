@@ -66,7 +66,7 @@ export const useAuth = (): UseAuthReturn => {
         });
 
         // Store token and user data
-        saveAuthData("temp_token", response.user); // Backend returns user, token handling will be through cookies
+        saveAuthData(response.token, response.user);
         setUser(response.user);
         setIsAuthenticated(true);
 
@@ -109,7 +109,7 @@ export const useAuth = (): UseAuthReturn => {
           mobile: mobile || undefined,
         });
 
-        saveAuthData("temp_token", response.user);
+        saveAuthData(response.token, response.user);
         setUser(response.user);
         setIsAuthenticated(true);
 

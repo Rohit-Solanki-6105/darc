@@ -64,15 +64,15 @@ export default function HomePage() {
                 <span className="text-sm text-muted-foreground">
                   Welcome, <span className="font-semibold text-foreground">{user.first_name || "User"}</span>
                 </span>
-                {user.is_developer && (
+                {user && (
                   <Button
                     variant="outline"
                     size="sm"
                     className="rounded-lg"
-                    onClick={() => router.push("/developer-dashboard")}
+                    onClick={() => router.push("/dashboard")}
                   >
                     <Store className="w-4 h-4 mr-1.5" />
-                    Developer Dashboard
+                    Dashboard
                   </Button>
                 )}
                 <Button
@@ -249,6 +249,7 @@ export default function HomePage() {
                             variant="default"
                             size="sm"
                             className="w-full mt-3 rounded-lg"
+                            onClick={() => router.push(`/useagent/${agent.agent_id}`)}
                           >
                             Use Agent
                           </Button>

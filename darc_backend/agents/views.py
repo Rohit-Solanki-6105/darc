@@ -133,6 +133,46 @@ class AgentViewSet(viewsets.ModelViewSet):
             {'message': 'Agent rejected'},
             status=status.HTTP_200_OK
         )
+    
+    @action(detail=True, methods=['post'], permission_classes=[IsAuthenticated])
+    def execute(self, request, pk=None):
+        """Execute the agent with provided inputs"""
+        agent = self.get_object()
+        
+        # Validate agent is approved
+        if agent.status != 'approved':
+            return Response(
+                {'error': 'Agent is not approved for use'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        
+        # Get input data from request
+        input_data = request.data.get('inputs', {})
+        
+        # Validate inputs against agent_template if it exists
+        if agent.agent_template:
+            for field_name in agent.agent_template.keys():
+                if field_name not in input_data:
+                    return Response(
+                        {'error': f'Missing required input: {field_name}'},
+                        status=status.HTTP_400_BAD_REQUEST
+                    )
+        
+        # In a real implementation, this would call the actual agent API
+        # For now, return mock output based on output_template
+        output_data = {}
+        if agent.output_template:
+            for field_name, field_type in agent.output_template.items():
+                output_data[field_name] = f"Mock {field_type} output for {field_name}"
+        else:
+            output_data = {"result": "Agent executed successfully", "inputs": input_data}
+        
+        return Response({
+            'agent_id': agent.agent_id,
+            'agent_name': agent.agent_name,
+            'output': output_data,
+            'status': 'success'
+        }, status=status.HTTP_200_OK)
 
 
 class CapabilityViewSet(viewsets.ModelViewSet):

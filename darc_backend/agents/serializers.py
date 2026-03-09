@@ -30,7 +30,7 @@ class AgentSerializer(serializers.ModelSerializer):
         fields = [
             'agent_id', 'developer', 'agent_name', 'description',
             'task_fees', 'agent_price', 'subscription_fee', 'rating',
-            'subscription_duration_days', 'agent_template', 'status', 
+            'subscription_duration_days', 'agent_template', 'output_template', 'api_endpoint', 'status', 
             'capabilities', 'created_at', 'updated_at'
         ]
         read_only_fields = ['agent_id', 'created_at', 'updated_at']
@@ -54,7 +54,7 @@ class AgentCreateSerializer(serializers.ModelSerializer):
         fields = [
             'agent_name', 'description', 'task_fees', 'agent_price',
             'subscription_fee', 'subscription_duration_days', 'agent_template',
-            'capabilities'
+            'output_template', 'api_endpoint', 'capabilities'
         ]
     
     def create(self, validated_data):
@@ -85,7 +85,7 @@ class AgentUpdateSerializer(serializers.ModelSerializer):
         fields = [
             'agent_name', 'description', 'task_fees', 'agent_price',
             'subscription_fee', 'subscription_duration_days', 'agent_template',
-            'capabilities'
+            'output_template', 'api_endpoint', 'capabilities'
         ]
     
     def update(self, instance, validated_data):
@@ -117,7 +117,7 @@ class AgentListSerializer(serializers.ModelSerializer):
         model = Agent
         fields = [
             'agent_id', 'agent_name', 'developer_name', 'agent_price',
-            'rating', 'status', 'capabilities', 'created_at'
+            'rating', 'status', 'capabilities', 'created_at', 'api_endpoint'
         ]
     
     def get_capabilities(self, obj):

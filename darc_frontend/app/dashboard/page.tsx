@@ -14,6 +14,7 @@ import {
   CheckCircle,
   Clock,
   XCircle,
+  Zap,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -41,17 +42,14 @@ export default function DeveloperDashboardPage() {
 
   // Fetch developer's agents on mount
   useEffect(() => {
-    // Fetch all agents - note: API doesn't have developer-only filter yet
-    // We'll filter on client side
-    fetchAgents({});
-  }, [fetchAgents]);
+    if (user?.id) {
+      // Fetch only this developer's agents
+      fetchAgents({ developer_id: user.id });
+    }
+  }, [user?.id, fetchAgents]);
 
-  // Filter agents by developer and status
-  const developerAgents = (agents || []).filter(
-    (agent) => agent.developer_id === user?.id
-  );
-
-  const filteredAgents = developerAgents
+  // Filter agents by status and search
+  const filteredAgents = (agents || [])
     .filter((agent) => {
       if (statusFilter !== "all") {
         return agent.status === statusFilter;
@@ -107,7 +105,9 @@ export default function DeveloperDashboardPage() {
     try {
       await deleteAgent(agentId);
       // Refresh agents list
-      await fetchAgents({});
+      if (user?.id) {
+        await fetchAgents({ developer_id: user.id });
+      }
     } catch (err) {
       console.error("Error deleting agent:", err);
       alert("Failed to delete agent");
@@ -117,11 +117,11 @@ export default function DeveloperDashboardPage() {
   };
 
   const stats = {
-    totalAgents: developerAgents.length,
-    approvedAgents: developerAgents.filter((a) => a.status === "approved")
+    totalAgents: agents.length,
+    approvedAgents: agents.filter((a) => a.status === "approved")
       .length,
-    pendingAgents: developerAgents.filter((a) => a.status === "pending").length,
-    rejectedAgents: developerAgents.filter((a) => a.status === "rejected")
+    pendingAgents: agents.filter((a) => a.status === "pending").length,
+    rejectedAgents: agents.filter((a) => a.status === "rejected")
       .length,
     totalEarnings: user?.total_earning || 0,
   };
@@ -247,7 +247,7 @@ export default function DeveloperDashboardPage() {
                     Total Earnings
                   </div>
                   <div className="text-2xl font-bold text-primary">
-                    ${stats.totalEarnings.toFixed(2)}
+                    ${stats.totalEarnings}
                   </div>
                 </CardContent>
               </Card>
@@ -262,7 +262,7 @@ export default function DeveloperDashboardPage() {
                 className="mb-8"
               >
                 <Button
-                  onClick={() => setShowCreateForm(true)}
+                  onClick={() => router.push("/registerAgent")}
                   className="rounded-lg"
                 >
                   <Plus className="w-4 h-4 mr-2" />
@@ -442,7 +442,9 @@ export default function DeveloperDashboardPage() {
                     variant="outline"
                     size="sm"
                     className="mt-3"
-                    onClick={() => fetchAgents({})}
+                    onClick={() =>
+                      user?.id && fetchAgents({ developer_id: user.id })
+                    }
                   >
                     Retry
                   </Button>
@@ -529,6 +531,19 @@ export default function DeveloperDashboardPage() {
                                 >
                                   <BarChart3 className="w-4 h-4" />
                                 </Button>
+                                {agent.status === "approved" && (
+                                  <Button
+                                    variant="default"
+                                    size="sm"
+                                    className="rounded-lg"
+                                    onClick={() =>
+                                      router.push(`/useagent/${agent.agent_id}`)
+                                    }
+                                  >
+                                    <Zap className="w-4 h-4 mr-1" />
+                                    Use
+                                  </Button>
+                                )}
                               </div>
                             </div>
                           </CardContent>
@@ -539,7 +554,7 @@ export default function DeveloperDashboardPage() {
                     <div className="text-center py-12 text-muted-foreground">
                       <p className="text-lg font-semibold mb-2">No agents found</p>
                       <p className="text-sm mb-4">
-                        {developerAgents.length === 0
+                        {agents.length === 0
                           ? "Start by creating your first agent"
                           : "No agents match your filters"}
                       </p>

@@ -16,11 +16,18 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework.routers import DefaultRouter
+from agents.views import CapabilityViewSet
+
+# Register capabilities at the top level
+capabilities_router = DefaultRouter()
+capabilities_router.register(r'', CapabilityViewSet, basename='capability')
 
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api/users/', include('users.urls')),
     path('api/agents/', include('agents.urls')),
+    path('api/capabilities/', include(capabilities_router.urls)),
     path('api/transactions/', include('transactions.urls')),
     path('api/reviews/', include('reviews.urls')),
 ]

@@ -43,6 +43,29 @@ class User(models.Model):
             models.Index(fields=['is_developer']),
         ]
     
+    USERNAME_FIELD = 'email'
+    REQUIRED_FIELDS = ['first_name', 'last_name']
+    
+    @property
+    def is_anonymous(self):
+        return False
+    
+    @property
+    def is_authenticated(self):
+        return True
+    
+    @property
+    def is_active(self):
+        return self.status == 'allowed'
+    
+    @property
+    def is_staff(self):
+        return False
+    
+    @property
+    def is_superuser(self):
+        return False
+    
     def __str__(self):
         return f"{self.first_name} {self.last_name} ({self.email})"
     

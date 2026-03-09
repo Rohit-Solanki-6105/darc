@@ -20,8 +20,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { AnimatedGradientBackground } from "@/components/AnimatedGradientBackground";
 import apiService from "@/lib/api";
+import { a, output } from "framer-motion/client";
 
 type InputField = {
+    name: string;
+    type: 'string' | 'file' | 'number' | 'boolean' | 'array';
+};
+type OutputField = {
     name: string;
     type: 'string' | 'file' | 'number' | 'boolean' | 'array';
 };
@@ -37,10 +42,13 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 export default function RegisterAgentPage() {
     const [formStatus, setFormStatus] = useState<'idle' | 'submitting' | 'submitted'>('idle');
     const [templateInputs, setTemplateInputs] = useState<InputField[]>([]);
+    const [templateOutputs, setTemplateOutputs] = useState<InputField[]>([]);
     const [selectedCapabilities, setSelectedCapabilities] = useState<number[]>([]);
     const [newCapability, setNewCapability] = useState('');
     const [newInputField, setNewInputField] = useState<InputField>({ name: '', type: 'string' });
+    const [newOutputField, setNewOutputField] = useState<InputField>({ name: '', type: 'string' });
     const [showInputForm, setShowInputForm] = useState(false);
+    const [showOutputForm, setShowOutputForm] = useState(false);
     const [availableCapabilities, setAvailableCapabilities] = useState<Capability[]>([]);
     const [capabilitiesLoading, setCapabilitiesLoading] = useState(true);
     const [capabilitiesError, setCapabilitiesError] = useState<string | null>(null);
@@ -71,11 +79,21 @@ export default function RegisterAgentPage() {
             setShowInputForm(false);
         }
     };
-
+    const handleAddOutputField = () => {
+        if (newOutputField.name.trim()) {
+            setTemplateOutputs([...templateOutputs, newOutputField]);
+            setNewOutputField({ name: '', type: 'string' });
+            setShowOutputForm(false);
+        }
+    };
     const handleRemoveInputField = (index: number) => {
         setTemplateInputs(templateInputs.filter((_, i) => i !== index));
     };
+    const handleRemoveOutputField = (index: number) => {
+        setTemplateOutputs(templateOutputs.filter((_, i) => i !== index));
+    };
 
+    
     const handleToggleCapability = (capabilityId: number) => {
         setSelectedCapabilities(prev => 
             prev.includes(capabilityId) 
@@ -109,31 +127,27 @@ export default function RegisterAgentPage() {
             const agentData = {
                 agent_name: formData.get('agent_name'),
                 description: formData.get('description'),
-                task_fees: parseFloat(formData.get('task_fees') as string),
-                agent_price: parseFloat(formData.get('agent_price') as string),
-                subscription_fee: parseFloat(formData.get('subscription_fee') as string),
+                task_fees: formData.get('task_fees') ? parseFloat(formData.get('task_fees') as string) : null,
+                agent_price: formData.get('agent_price') ? parseFloat(formData.get('agent_price') as string) : null,
+                subscription_fee: formData.get('subscription_fee') ? parseFloat(formData.get('subscription_fee') as string) : null,
                 subscription_duration_days: 30,
+                api_endpoint: formData.get('api_endpoint'),
                 agent_template: templateInputs.length > 0 ? Object.fromEntries(templateInputs.map(field => [field.name, field.type])) : null,
+                output_template: templateOutputs.length > 0 ? Object.fromEntries(templateOutputs.map(field => [field.name, field.type])) : null,
                 capabilities: selectedCapabilities,
             };
 
-            const response = await fetch(`${API_URL}/agents/`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${localStorage.getItem('auth_token') || ''}`,
-                },
-                body: JSON.stringify(agentData),
-            });
-
-            if (!response.ok) {
+            const response = await apiService.createAgent(agentData);
+            
+            if (response) {
+                setFormStatus('submitted');
+            } else {
                 throw new Error('Failed to register agent');
             }
-
-            setFormStatus('submitted');
-        } catch (err) {
+        } catch (err: any) {
             console.error('Error registering agent:', err);
-            alert('Failed to register agent. Please try again.');
+            const errorMessage = err.response?.data?.error || 'Failed to register agent. Please try again.';
+            alert(errorMessage);
             setFormStatus('idle');
         }
     };
@@ -141,6 +155,10 @@ export default function RegisterAgentPage() {
     // Generate template preview as JSON
     const templatePreview = templateInputs.length > 0
         ? Object.fromEntries(templateInputs.map(field => [field.name, field.type]))
+        : null;
+
+    const templateOutPreview = templateOutputs.length > 0
+        ? Object.fromEntries(templateOutputs.map(field => [field.name, field.type]))
         : null;
 
     return (
@@ -199,13 +217,14 @@ export default function RegisterAgentPage() {
                                 <div className="grid gap-6 md:grid-cols-2">
                                     <div className="space-y-2 md:col-span-2">
                                         <Label htmlFor="agentName">Agent Name</Label>
-                                        <Input id="agentName" placeholder="e.g. DeFi Smart Contract Auditor" required disabled={formStatus === 'submitting'} className="text-base py-6" />
+                                        <Input id="agentName" name="agent_name" placeholder="e.g. DeFi Smart Contract Auditor" required disabled={formStatus === 'submitting'} className="text-base py-6" />
                                     </div>
 
                                     <div className="space-y-2 md:col-span-2">
                                         <Label htmlFor="description">Description</Label>
                                         <textarea
                                             id="description"
+                                            name="description"
                                             placeholder="What does your agent do? Be specific about its capabilities and use cases."
                                             className="flex min-h-[120px] w-full rounded-md border border-input bg-transparent px-3 py-3 text-base shadow-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                                             required
@@ -215,24 +234,24 @@ export default function RegisterAgentPage() {
 
                                     <div className="space-y-2">
                                         <Label htmlFor="taskFees">Task Fees ($)</Label>
-                                        <Input id="taskFees" type="number" min="0" step="0.01" placeholder="e.g. 0.50 per task" required disabled={formStatus === 'submitting'} className="text-base py-5" />
+                                        <Input id="taskFees" name="task_fees" type="number" min="0" step="0.01" placeholder="e.g. 0.50 per task" required disabled={formStatus === 'submitting'} className="text-base py-5" />
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label htmlFor="subscriptionFees">Subscription Fees ($/month)</Label>
-                                        <Input id="subscriptionFees" type="number" min="0" step="0.01" placeholder="e.g. 19.99" required disabled={formStatus === 'submitting'} className="text-base py-5" />
+                                        <Input id="subscriptionFees" name="subscription_fee" type="number" min="0" step="0.01" placeholder="e.g. 19.99" required disabled={formStatus === 'submitting'} className="text-base py-5" />
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label htmlFor="agentPrice">Agent Buyout Price ($)</Label>
                                         <p className="text-xs text-muted-foreground -mt-1 mb-2">If a user wants to buy out/own this agent in the future.</p>
-                                        <Input id="agentPrice" type="number" min="0" step="0.01" placeholder="e.g. 5000" required disabled={formStatus === 'submitting'} className="text-base py-5" />
+                                        <Input id="agentPrice" name="agent_price" type="number" min="0" step="0.01" placeholder="e.g. 5000" required disabled={formStatus === 'submitting'} className="text-base py-5" />
                                     </div>
 
                                     <div className="space-y-2">
                                         <Label htmlFor="agentAPIendpoint">Agent API Endpoint</Label>
                                         <p className="text-xs text-muted-foreground -mt-1 mb-2">Hosted URL where platform can connect to this agent.</p>
-                                        <Input id="agentAPIendpoint" type="url" placeholder="https://api.yourdomain.com/v1" required disabled={formStatus === 'submitting'} className="text-base py-5" />
+                                        <Input id="agentAPIendpoint" name="api_endpoint" type="url" placeholder="https://api.yourdomain.com/v1" required disabled={formStatus === 'submitting'} className="text-base py-5" />
                                     </div>
 
                                     <div className="space-y-2">
@@ -356,6 +375,116 @@ export default function RegisterAgentPage() {
                                     </div>
                                 )}
                             </div>
+
+                            {/* template outputs */}
+                            <div className="space-y-4 border-t border-border pt-6">
+                                <h2 className="text-lg font-semibold text-foreground flex items-center gap-2">
+                                    <Code className="w-5 h-5" />
+                                    Output Template
+                                </h2>
+                                <p className="text-sm text-muted-foreground">
+                                    Define what types of outputs your agent produces. This tells clients how to interpret the results from your agent.
+                                </p>
+
+                                {/* Output Fields List */}
+                                {templateOutputs.length > 0 && (
+                                    <div className="bg-muted/30 rounded-lg p-4 space-y-2">
+                                        {templateOutputs.map((field, index) => (
+                                            <div key={index} className="flex items-center justify-between bg-background/60 rounded p-3">
+                                                <div className="flex-1">
+                                                    <span className="font-medium text-foreground">{field.name}</span>
+                                                    <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded ml-2">{field.type}</span>
+                                                </div>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleRemoveOutputField(index)}
+                                                    className="text-destructive hover:bg-destructive/10 p-2 rounded"
+                                                >
+                                                    <X className="w-4 h-4" />
+                                                </button>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+
+                                {/* Add New Output Field */}
+                                {!showInputForm && (
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="w-full rounded-lg"
+                                        onClick={() => setShowOutputForm(true)}
+                                    >
+                                        <Plus className="w-4 h-4 mr-2" />
+                                        Add Output Field
+                                    </Button>
+                                )}
+
+                                {showOutputForm && (
+                                    <div className="bg-muted/30 rounded-lg p-4 space-y-4">
+                                        <div>
+                                            <Label htmlFor="fieldName" className="text-sm">Field Name</Label>
+                                            <Input
+                                                id="fieldName"
+                                                placeholder="e.g. prompt, document, image"
+                                                value={newOutputField.name}
+                                                onChange={(e) => setNewOutputField({ ...newInputField, name: e.target.value })}
+                                                className="rounded-lg"
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <Label htmlFor="fieldType" className="text-sm">Field Type</Label>
+                                            <select
+                                                id="fieldType"
+                                                value={newOutputField.type}
+                                                onChange={(e) => setNewOutputField({ ...newOutputField, type: e.target.value as OutputField['type'] })}
+                                                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                <option value="string">String (Text)</option>
+                                                <option value="file">File (Upload)</option>
+                                                <option value="number">Number</option>
+                                                <option value="boolean">Boolean (Yes/No)</option>
+                                                <option value="array">Array (List)</option>
+                                            </select>
+                                        </div>
+
+                                        <div className="flex gap-2">
+                                            <Button
+                                                type="button"
+                                                onClick={handleAddOutputField}
+                                                disabled={!newOutputField.name.trim()}
+                                                className="flex-1 rounded-lg"
+                                            >
+                                                Add Field
+                                            </Button>
+                                            <Button
+                                                type="button"
+                                                variant="outline"
+                                                onClick={() => {
+                                                    setShowOutputForm(false);
+                                                    setNewOutputField({ name: '', type: 'string' });
+                                                }}
+                                                className="flex-1 rounded-lg"
+                                            >
+                                                Cancel
+                                            </Button>
+                                        </div>
+                                    </div>
+                                )}
+
+                                {/* Template Preview */}
+                                {templateOutPreview && (
+                                    <div className="bg-background/60 border border-border rounded-lg p-4">
+                                        <p className="text-xs font-medium text-muted-foreground mb-2">Template Preview (JSON):</p>
+                                        <pre className="text-xs overflow-auto bg-muted/30 rounded p-3 text-foreground">
+                                            {JSON.stringify(templateOutPreview, null, 2)}
+                                        </pre>
+                                    </div>
+                                )}
+                            </div>
+
+
 
                             {/* Capabilities */}
                             <div className="space-y-4 border-t border-border pt-6">

@@ -71,6 +71,8 @@ class Agent(models.Model):
     )
     subscription_duration_days = models.IntegerField(default=30)
     agent_template = models.JSONField(null=True, blank=True)
+    output_template = models.JSONField(null=True, blank=True)
+    api_endpoint = models.URLField(null=True, blank=True)
     status = models.CharField(
         max_length=20,
         choices=STATUS_CHOICES,

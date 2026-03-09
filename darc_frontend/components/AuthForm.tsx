@@ -156,7 +156,7 @@ export function AuthForm({ defaultMode = 'login' }: { defaultMode?: 'login' | 's
                     </div>
                 </form>
 
-                {/* <div className="relative my-7">
+                {/* <div clgit passName="relative my-7">
                     <div className="absolute inset-0 flex items-center">
                         <Separator className="w-full bg-border" />
                     </div>

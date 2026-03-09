@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { Search, SlidersHorizontal, Bot, Sparkles, Zap } from "lucide-react";
 import { Input } from "@/components/ui/input";
@@ -17,13 +18,12 @@ const CATEGORIES = [
   "Productivity",
 ];
 
-// Placeholder agents - replace with API data
 const MOCK_AGENTS = [
   {
     id: 1,
     name: "Code Assistant",
     description:
-      "Helps you write, refactor, and debug code in multiple programming languages such as JavaScript, Python, and TypeScript. It can also suggest better patterns, optimize performance, and explain complex logic to improve code quality.",
+      "Helps you write, refactor, and debug code in multiple programming languages such as JavaScript, Python, and TypeScript.",
     category: "Code",
     usage: "12k uses",
   },
@@ -31,7 +31,7 @@ const MOCK_AGENTS = [
     id: 2,
     name: "Content Writer",
     description:
-      "Creates blog posts, landing page copy, advertisements, and long-form marketing content. It can adapt tone for different audiences, generate headlines, and structure articles for readability and engagement.",
+      "Creates blog posts, landing page copy, advertisements, and long-form marketing content.",
     category: "Writing",
     usage: "8k uses",
   },
@@ -39,7 +39,7 @@ const MOCK_AGENTS = [
     id: 3,
     name: "Data Analyzer",
     description:
-      "Analyzes datasets, identifies patterns, and generates actionable insights. It can summarize data trends, explain correlations, and assist with creating reports or visualizations for decision making.",
+      "Analyzes datasets, identifies patterns, and generates actionable insights.",
     category: "Analysis",
     usage: "5k uses",
   },
@@ -47,7 +47,7 @@ const MOCK_AGENTS = [
     id: 4,
     name: "Image Generator",
     description:
-      "Creates high-quality images from natural language prompts. You can generate illustrations, concept art, product mockups, and creative visuals for presentations, marketing materials, or social media.",
+      "Creates high-quality images from natural language prompts.",
     category: "Creative",
     usage: "15k uses",
   },
@@ -55,7 +55,7 @@ const MOCK_AGENTS = [
     id: 5,
     name: "SEO Optimizer",
     description:
-      "Improves your content’s search engine performance by suggesting relevant keywords, optimizing headings, analyzing readability, and providing on-page SEO recommendations to increase organic traffic.",
+      "Improves your content’s search engine performance with keyword suggestions.",
     category: "Code",
     usage: "6k uses",
   },
@@ -63,7 +63,7 @@ const MOCK_AGENTS = [
     id: 6,
     name: "Chatbot Builder",
     description:
-      "Helps design, configure, and deploy conversational chatbots for websites or apps. It supports conversation flows, automated responses, and integrations with APIs or customer support tools.",
+      "Helps design, configure, and deploy conversational chatbots.",
     category: "Writing",
     usage: "7k uses",
   },
@@ -71,7 +71,7 @@ const MOCK_AGENTS = [
     id: 7,
     name: "Resume Reviewer",
     description:
-      "Reviews resumes and provides detailed feedback on structure, wording, and formatting. It suggests improvements to highlight achievements, optimize for ATS systems, and increase interview chances.",
+      "Reviews resumes and provides feedback to improve structure and clarity.",
     category: "Productivity",
     usage: "4k uses",
   },
@@ -79,7 +79,7 @@ const MOCK_AGENTS = [
     id: 8,
     name: "Social Media Manager",
     description:
-      "Generates social media posts, captions, hashtags, and monthly content calendars. It can adapt messaging for different platforms like LinkedIn, Instagram, and X while maintaining brand voice.",
+      "Generates social media posts, captions, hashtags, and content calendars.",
     category: "Analysis",
     usage: "9k uses",
   },
@@ -92,18 +92,20 @@ export default function HomePage() {
   const filteredAgents =
     category === "All"
       ? MOCK_AGENTS.filter((a) =>
-          a.name.toLowerCase().includes(search.toLowerCase()),
+          a.name.toLowerCase().includes(search.toLowerCase())
         )
       : MOCK_AGENTS.filter(
           (a) =>
             a.category === category &&
-            a.name.toLowerCase().includes(search.toLowerCase()),
+            a.name.toLowerCase().includes(search.toLowerCase())
         );
 
   return (
     <main className="relative min-h-screen w-full">
       <AnimatedGradientBackground />
+
       <div className="relative z-10 min-h-screen flex flex-col">
+
         {/* Header */}
         <header className="border-b border-border bg-background/40 backdrop-blur-xl sticky top-0 z-20">
           <div className="max-w-6xl mx-auto px-4 sm:px-6 py-4 flex items-center justify-between">
@@ -111,6 +113,7 @@ export default function HomePage() {
               <Sparkles className="w-6 h-6 text-primary" />
               <span className="font-bold text-lg text-foreground">DARC</span>
             </div>
+
             <nav className="flex items-center gap-4">
               <a
                 href="/"
@@ -118,6 +121,7 @@ export default function HomePage() {
               >
                 Login
               </a>
+
               <a
                 href="/connect-wallet"
                 className="text-sm text-muted-foreground hover:text-foreground transition-colors"
@@ -128,7 +132,7 @@ export default function HomePage() {
           </div>
         </header>
 
-        {/* Hero / Introduction */}
+        {/* Hero */}
         <section className="max-w-6xl mx-auto w-full px-4 sm:px-6 py-12 md:py-16">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
@@ -139,15 +143,15 @@ export default function HomePage() {
             <h1 className="text-4xl md:text-5xl font-bold text-foreground tracking-tight">
               AI Agents, Ready for the Web
             </h1>
+
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
               Discover and use AI agents deployed on DARC. Access powerful
-              assistants for code, writing, analysis, and more—right from your
-              browser, anywhere.
+              assistants for code, writing, analysis, and more.
             </p>
           </motion.div>
         </section>
 
-        {/* Search & Category */}
+        {/* Search */}
         <section className="max-w-6xl mx-auto w-full px-4 sm:px-6 pb-6">
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -157,6 +161,7 @@ export default function HomePage() {
           >
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+
               <Input
                 placeholder="Search agents..."
                 value={search}
@@ -164,6 +169,7 @@ export default function HomePage() {
                 className="pl-9 h-11 rounded-xl bg-background/60 border-border"
               />
             </div>
+
             <div className="flex gap-2 overflow-x-auto pb-1 sm:pb-0">
               {CATEGORIES.map((c) => (
                 <Button
@@ -183,7 +189,7 @@ export default function HomePage() {
           </motion.div>
         </section>
 
-        {/* Agent Grid */}
+        {/* Agents Grid */}
         <section className="flex-1 max-w-8xl mx-auto w-full px-4 sm:px-6 pb-12">
           <motion.div
             initial={{ opacity: 0 }}
@@ -192,44 +198,49 @@ export default function HomePage() {
             className="grid sm:grid-cols-2 lg:grid-cols-4 gap-2"
           >
             {filteredAgents.map((agent) => (
-              <Card
-                key={agent.id}
-                className="bg-background/60 backdrop-blur-xl border-border hover:border-primary/30 transition-colors cursor-pointer group"
-              >
-                <CardContent>
-                  <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                      <Bot className="w-5 h-5" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                        {agent.name}
-                      </h3>
-                      <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5 h-26">
-                        {agent.description}
-                      </p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <span className="text-xs text-muted-foreground">
-                          {agent.usage}
-                        </span>
-                        <span className="text-xs px-1.5 py-0.5 rounded bg-muted">
-                          {agent.category}
-                        </span>
+              <Link key={agent.id} href={`/agents/${agent.id}`}>
+                <Card className="bg-background/60 backdrop-blur-xl border-border hover:border-primary/30 transition-colors cursor-pointer group">
+                  <CardContent>
+                    <div className="flex items-start gap-3">
+                      <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                        <Bot className="w-5 h-5" />
                       </div>
+
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                          {agent.name}
+                        </h3>
+
+                        <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5 h-26">
+                          {agent.description}
+                        </p>
+
+                        <div className="flex items-center gap-2 mt-2">
+                          <span className="text-xs text-muted-foreground">
+                            {agent.usage}
+                          </span>
+
+                          <span className="text-xs px-1.5 py-0.5 rounded bg-muted">
+                            {agent.category}
+                          </span>
+                        </div>
+                      </div>
+
+                      <Zap className="w-4 h-4 text-muted-foreground group-hover:text-primary shrink-0 mt-1" />
                     </div>
-                    <Zap className="w-4 h-4 text-muted-foreground group-hover:text-primary shrink-0 mt-1" />
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </Link>
             ))}
           </motion.div>
 
           {filteredAgents.length === 0 && (
             <div className="text-center py-12 text-muted-foreground">
-              No agents match your search. Try a different query or category.
+              No agents match your search.
             </div>
           )}
         </section>
+
       </div>
     </main>
   );

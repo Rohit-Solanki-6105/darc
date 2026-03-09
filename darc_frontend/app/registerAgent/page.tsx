@@ -7,6 +7,7 @@ import {
     Zap,
     CheckCircle2,
     ArrowLeft,
+    Plus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,10 +17,24 @@ import { AnimatedGradientBackground } from "@/components/AnimatedGradientBackgro
 export default function RegisterAgentPage() {
     const [formStatus, setFormStatus] = useState<'idle' | 'submitting' | 'submitted'>('idle');
 
+    const [showTemplateModal, setShowTemplateModal] = useState(false);
+
+    const [templateConfig, setTemplateConfig] = useState({
+        input: "",
+        output: ""
+    });
+
     const handleRegisterAgent = (e: React.FormEvent) => {
         e.preventDefault();
+
+        const payload = {
+            templateFormat: templateConfig
+        };
+
+        console.log("Agent Template Config:", payload);
+
         setFormStatus('submitting');
-        // Simulate API call
+
         setTimeout(() => {
             setFormStatus('submitted');
         }, 1500);
@@ -110,38 +125,52 @@ export default function RegisterAgentPage() {
                                     <Input id="agentAPIendpoint" type="url" placeholder="https://api.yourdomain.com/v1" required disabled={formStatus === 'submitting'} className="text-base py-5" />
                                 </div>
 
+                                {/* TEMPLATE FORMAT */}
                                 <div className="space-y-2">
-                                    <Label htmlFor="templateFormat">Template Format (Optional)</Label>
-                                    <p className="text-xs text-muted-foreground -mt-1 mb-2">What inputs your agent needs (e.g., File Upload, Text prompt).</p>
-                                    <Input id="templateFormat" placeholder="e.g. PDF Upload, Text" disabled={formStatus === 'submitting'} className="text-base py-5" />
+                                    <Label>Template Format (Optional)</Label>
+                                    <p className="text-xs text-muted-foreground -mt-1 mb-2">
+                                        Define what type of input your agent accepts and what output it returns.
+                                    </p>
+
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        onClick={() => setShowTemplateModal(true)}
+                                        className="w-full flex items-center justify-center gap-2 py-5 text-base"
+                                        disabled={formStatus === "submitting"}
+                                    >
+                                        <Plus className="w-4 h-4" />
+                                        Add Template Format
+                                    </Button>
+
+                                    {templateConfig.input && (
+                                        <p className="text-xs text-muted-foreground mt-2">
+                                            Input: <strong>{templateConfig.input}</strong> | Output:{" "}
+                                            <strong>{templateConfig.output}</strong>
+                                        </p>
+                                    )}
                                 </div>
 
                                 <div className="space-y-2">
                                     <Label htmlFor="logo">Agent Logo (Optional)</Label>
                                     <p className="text-xs text-muted-foreground -mt-1 mb-2">Upload a square image (PNG, JPG) for your agent.</p>
-                                    <div className="relative">
-                                        <Input
-                                            id="logo"
-                                            type="file"
-                                            accept="image/png, image/jpeg, image/jpg, image/webp"
-                                            disabled={formStatus === 'submitting'}
-                                            className="text-base py-3 pl-0 h-auto cursor-pointer file:cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 transition-all border-none focus-visible:ring-0 bg-transparent text-muted-foreground"
-                                        />
-                                    </div>
+                                    <Input
+                                        id="logo"
+                                        type="file"
+                                        accept="image/png, image/jpeg, image/jpg, image/webp"
+                                        disabled={formStatus === 'submitting'}
+                                        className="text-base py-3 pl-0 h-auto cursor-pointer file:cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary file:text-primary-foreground hover:file:bg-primary/90 transition-all border-none focus-visible:ring-0 bg-transparent text-muted-foreground"
+                                    />
                                 </div>
                             </div>
 
                             <div className="flex gap-4 justify-end pt-6 border-t border-border mt-8">
                                 <Link href="/developer-dashboard">
-                                    <Button
-                                        type="button"
-                                        variant="ghost"
-                                        disabled={formStatus === 'submitting'}
-                                        size="lg"
-                                    >
+                                    <Button type="button" variant="ghost" disabled={formStatus === 'submitting'} size="lg">
                                         Cancel
                                     </Button>
                                 </Link>
+
                                 <Button type="submit" disabled={formStatus === 'submitting'} size="lg">
                                     {formStatus === 'submitting' ? (
                                         <>
@@ -160,6 +189,82 @@ export default function RegisterAgentPage() {
                     )}
                 </motion.div>
             </div>
+
+            {/* TEMPLATE MODAL */}
+            {showTemplateModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4">
+                    <div className="bg-background border border-border rounded-xl w-full max-w-md p-6 space-y-6 shadow-2xl">
+
+                        <h3 className="text-lg font-semibold">
+                            Configure Template Format
+                        </h3>
+
+                        <div className="space-y-3">
+                            <Label>Input Format</Label>
+                            <div className="flex gap-3 flex-wrap">
+                                {["Text", "File", "Both"].map((type) => (
+                                    <Button
+                                        key={type}
+                                        type="button"
+                                        variant={templateConfig.input === type ? "default" : "outline"}
+                                        onClick={() =>
+                                            setTemplateConfig((prev) => ({
+                                                ...prev,
+                                                input: type
+                                            }))
+                                        }
+                                    >
+                                        {type}
+                                    </Button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="space-y-3">
+                            <Label>Output Format</Label>
+                            <div className="flex gap-3 flex-wrap">
+                                {["Text", "File", "Both"].map((type) => (
+                                    <Button
+                                        key={type}
+                                        type="button"
+                                        variant={templateConfig.output === type ? "default" : "outline"}
+                                        onClick={() =>
+                                            setTemplateConfig((prev) => ({
+                                                ...prev,
+                                                output: type
+                                            }))
+                                        }
+                                    >
+                                        {type}
+                                    </Button>
+                                ))}
+                            </div>
+                        </div>
+
+                        <div className="flex justify-end gap-3 pt-4 border-t border-border">
+
+                            <Button
+                                variant="ghost"
+                                type="button"
+                                onClick={() => setShowTemplateModal(false)}
+                            >
+                                Cancel
+                            </Button>
+
+                            <Button
+                                type="button"
+                                onClick={() => {
+                                    console.log("Template Saved:", templateConfig);
+                                    setShowTemplateModal(false);
+                                }}
+                            >
+                                Save Template
+                            </Button>
+
+                        </div>
+                    </div>
+                </div>
+            )}
         </main>
     );
 }
